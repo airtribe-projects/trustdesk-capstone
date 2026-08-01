@@ -98,7 +98,7 @@ function validateCitations(citations, documents) {
 }
 
 class GeminiAIProvider extends AIProvider {
-  constructor({ apiKey = process.env.GEMINI_API_KEY, model = "gemini-2.5-flash" } = {}) {
+  constructor({ apiKey = process.env.GEMINI_API_KEY, model = "gemini-3.5-flash" } = {}) {
     super();
 
     if (!apiKey) {

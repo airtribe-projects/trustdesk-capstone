@@ -10,7 +10,9 @@
     "prisma:generate": "prisma generate"
   },
   "dependencies": {
+    "@google/genai": "^2.15.0",
     "@prisma/client": "^6.0.0",
+    "dotenv": "^17.4.2",
     "express": "^4.21.2"
   },
   "devDependencies": {

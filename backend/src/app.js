@@ -1,5 +1,6 @@
 const express = require("express");
 
+const aiRoutes = require("./routes/aiRoutes");
 const knowledgeRoutes = require("./routes/knowledgeRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const { notFoundHandler, errorHandler } = require("./middleware/errorHandler");
@@ -14,6 +15,7 @@ app.get("/", (req, res) => {
 
 app.use("/tickets", ticketRoutes);
 app.use("/knowledge", knowledgeRoutes);
+app.use("/tickets", aiRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
