@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.venv
+venv
+backend/venv
+*.db
+*.sqlite
+*.sqlite3
+
+# Node
+node_modules
+dist
+
+# Environment and secrets
+.env
+backend/.env
+
+# IDE and OS
+.idea
+.vscode
+.DS_Store
+*.swp
+
+# Docker artifacts
+trustdesk_seed.db
+
+# Docs and assets not needed in images
+*.md
+!data/knowledge_base/*.md
