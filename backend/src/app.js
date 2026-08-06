@@ -12,14 +12,7 @@ const { notFoundHandler, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://trustdesk-capstone-airtribe.vercel.app",
-    ],
-  })
-);
+app.use(cors());
 
 app.use(express.json());
 
