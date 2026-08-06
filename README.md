@@ -1,61 +1,321 @@
-# TrustDesk Capstone Pack
+# TrustDesk Capstone
 
-This repository contains a self-contained capstone package for building **TrustDesk**, an AI-first customer support operations product.
+An AI-powered customer support assistant that helps support agents analyze tickets, retrieve relevant knowledge base articles, generate grounded replies, recommend operational actions, and evaluate AI performance using a curated benchmark dataset.
 
-The capstone is language agnostic. You may implement it in Node.js, Java, Python, Go, Ruby, or any stack you are comfortable with, as long as you satisfy the product, API, data, security, and evaluation requirements.
+---
 
-## Contents
+## Features
 
-- `TRUSTDESK_PROBLEM_STATEMENT.md` - capstone problem statement.
-- `docs/IMPLEMENTATION_GUIDE.md` - suggested build order, demo scenarios, and FAQ.
-- `docs/API_CONTRACT.md` - language-agnostic API contract and expected flows.
-- `docs/DATA_MODEL.md` - suggested entities, relationships, and storage expectations.
-- `docs/EVALUATION_GUIDE.md` - how to use the eval cases and what to measure.
-- `data/knowledge_base/` - sample policy and support documents for retrieval.
-- `data/customers.json` - fictional customer records.
-- `data/orders.json` - fictional order records.
-- `data/tickets.json` - support tickets with expected triage labels.
-- `data/eval_cases.jsonl` - evaluation cases for answer quality, citations, routing, and guardrails.
-- `data/tool_actions.json` - mock tool/action catalog for agentic workflows.
-- `scripts/seed_trustdesk.py` - optional Python utility that creates a local SQLite database from the sample data.
-- `scripts/run_baseline_retrieval.py` - optional Python utility that runs a simple keyword baseline over the seeded knowledge base.
-- `scripts/validate_pack.py` - optional Python utility that validates that the package data is parseable and internally consistent.
+### AI Ticket Analysis
+- Classifies customer tickets by category
+- Predicts ticket priority
+- Determines whether escalation is required
+- Uses Retrieval-Augmented Generation (RAG) with internal knowledge documents
 
-## Optional Local Utilities
+### Grounded Reply Generation
+- Generates customer replies based only on retrieved knowledge
+- Includes supporting knowledge base citations
+- Prevents unsupported or hallucinated responses
 
-From this folder:
+### Human Approval Workflow
+Operational actions requiring approval include:
+- Replacement orders
+- Other medium/high-risk tool actions
 
-```bash
-python3 scripts/validate_pack.py
-python3 scripts/seed_trustdesk.py --db trustdesk_seed.db
-python3 scripts/run_baseline_retrieval.py --db trustdesk_seed.db
+Workflow:
+1. AI recommends an operational action
+2. Agent requests execution
+3. Human reviewer approves or rejects
+4. Approved action can be executed
+
+### Evaluation Dashboard
+Runs the evaluation benchmark against the curated dataset and reports:
+
+- Cases Evaluated
+- Category Accuracy
+- Priority Accuracy
+- Escalation Accuracy
+- Citation Coverage
+- Guardrail Pass Rate
+- Overall Score
+
+The evaluation compares AI predictions against expected labels stored with each evaluation ticket.
+
+### Operational Logging
+
+Each AI analysis stores an AgentRun trace containing:
+
+- Retrieved knowledge documents
+- Tool calls
+- Guardrail results
+- Analysis status
+
+---
+
+# Technology Stack
+
+## Frontend
+
+- React
+- Vite
+- CSS
+
+## Backend
+
+- Node.js
+- Express
+- Prisma ORM
+- SQLite
+
+## AI
+
+- Google Gemini API
+- Retrieval-Augmented Generation (RAG)
+
+---
+
+# Project Structure
+
+```
+trustdesk-capstone/
+
+├── backend/
+│   ├── prisma/
+│   ├── src/
+│   │   ├── adapters/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── utils/
+│   └── package.json
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+└── README.md
 ```
 
-The scripts use only Python standard library modules.
+---
 
-You do not need to use these scripts or SQLite for your project. You can load the raw files in `data/` into PostgreSQL, MySQL, MongoDB, Elasticsearch, Redis, a vector database, local files, or any other storage system you choose.
+# Installation
 
-## Language-Agnostic Expectations
+## Clone the repository
 
-Your implementation should provide:
+```bash
+git clone <repository-url>
+cd trustdesk-capstone
+```
 
-- An HTTP API matching the core flows in `docs/API_CONTRACT.md`.
-- A lightweight frontend/demo UI for support workflows.
-- A persistent data model covering the entities in `docs/DATA_MODEL.md`.
-- A retrieval layer over `data/knowledge_base/`.
-- An AI/model adapter that can be mocked in tests.
-- Guardrails for prompt injection, sensitive data leakage, unsafe tool use, and unsupported answers.
-- An evaluation command, endpoint, or script that runs `data/eval_cases.jsonl` and reports results.
+---
 
-The frontend can be vibe-coded or AI-assisted. It does not need to be visually complex, but it should let you demonstrate ticket triage, grounded draft replies, citations, approval-gated tool actions, and evaluation results.
+## Backend Setup
 
-## Recommended Reading Order
+```bash
+cd backend
 
-1. Read `TRUSTDESK_PROBLEM_STATEMENT.md`.
-2. Follow `docs/IMPLEMENTATION_GUIDE.md` for the build path.
-3. Use `docs/API_CONTRACT.md` and `docs/DATA_MODEL.md` while designing your implementation.
-4. Use `docs/EVALUATION_GUIDE.md` before writing the eval runner.
+npm install
+```
 
-## Security Notes
+Create a `.env` file.
 
-The dataset intentionally includes adversarial tickets and one adversarial knowledge-base document. Do not treat retrieved text or customer text as trusted instructions. Your project should include prompt-injection defenses, citation checks, tool permissioning, human approval gates, and evaluation reports.
+Example:
+
+```env
+DATABASE_URL="file:./dev.db"
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+PORT=3000
+```
+
+Run Prisma:
+
+```bash
+npx prisma generate
+```
+
+Seed the database:
+
+```bash
+npx prisma db seed
+```
+
+Start the backend:
+
+```bash
+npm run dev
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+The frontend runs on
+
+```
+http://localhost:5173
+```
+
+The backend runs on
+
+```
+http://localhost:3000
+```
+
+---
+
+# Demo Workflow
+
+## AI Ticket Analysis
+
+1. Select a ticket.
+2. Click **Analyze AI**.
+3. Review:
+   - Classification
+   - Draft reply
+   - Citations
+   - Recommended action
+
+---
+
+## Reply
+
+Click **Reply** to:
+
+- Review the generated draft
+- Edit if needed
+- Send the response
+
+---
+
+## Human Approval
+
+For tickets requiring operational actions:
+
+1. Request replacement
+2. Review approval request
+3. Approve or reject
+4. Execute approved action
+
+---
+
+## Evaluation
+
+Open the **Evaluation** page.
+
+The dashboard evaluates every benchmark ticket and reports:
+
+- Classification accuracy
+- Priority accuracy
+- Escalation accuracy
+- Citation validation
+- Guardrail performance
+- Overall evaluation score
+
+---
+
+# API Endpoints
+
+## Ticket APIs
+
+```
+GET /tickets
+```
+
+```
+GET /tickets/:ticketId
+```
+
+```
+POST /tickets/:ticketId/analyze
+```
+
+---
+
+## Tool Actions
+
+```
+GET /tickets/:ticketId/tool-actions
+```
+
+```
+POST /tickets/:ticketId/tool-actions/replacement
+```
+
+```
+POST /tool-actions/:actionId/decision
+```
+
+```
+POST /tool-actions/:actionId/execute
+```
+
+---
+
+## Evaluation
+
+```
+GET /evaluation
+```
+
+Runs the benchmark across the complete evaluation dataset.
+
+---
+
+## Demo Reset
+
+```
+POST /demo/reset
+```
+
+Removes operational tool actions and approvals while preserving the seeded dataset.
+
+---
+
+# Evaluation Metrics
+
+The evaluation benchmark measures:
+
+- Category Accuracy
+- Priority Accuracy
+- Escalation Accuracy
+- Citation Coverage
+- Guardrail Pass Rate
+- Overall AI Score
+
+---
+
+# Security Features
+
+- Retrieval-Augmented Generation
+- Prompt injection resistance
+- Citation validation
+- Human approval for sensitive operations
+- Operational action logging
+- Guardrail evaluation
+
+---
+
+# Notes
+
+- The evaluation endpoint performs live Gemini inference across the benchmark dataset.
+- A valid Gemini API key is required.
+- Free-tier Gemini API quotas may temporarily prevent evaluation if daily request limits are exceeded.
+- Human approval is required before executing protected operational actions.
+
+---
+
+# Author
+
+**Rudransh Singh**
+
+TrustDesk Capstone Project
