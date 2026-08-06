@@ -36,7 +36,7 @@ const DRAFT_SCHEMA = {
 
 const UNSUPPORTED_REPLY =
   "I cannot determine the answer from the retrieved knowledge documents.";
-const REQUEST_TIMEOUT_MS = 20_000;
+const REQUEST_TIMEOUT_MS = 60_000;
 
 function formatDocuments(documents) {
   return documents
@@ -71,7 +71,7 @@ async function requestWithTimeout(request) {
   let timeoutId;
   const timeout = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
-      reject(new Error("Gemini request timed out after 20 seconds"));
+      reject(new Error("Gemini request timed out after 60 seconds"));
     }, REQUEST_TIMEOUT_MS);
   });
 
