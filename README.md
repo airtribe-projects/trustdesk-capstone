@@ -171,6 +171,68 @@ The backend runs on
 http://localhost:3000
 ```
 
+# Docker Setup
+
+## Prerequisites
+
+Before running the project, make sure you have:
+
+- Docker Desktop installed
+- Docker Engine running
+- A valid Gemini API key
+
+Create a `.env` file inside the `backend` directory with:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+DATABASE_URL=file:./prisma/dev.db
+```
+
+## Running with Docker
+
+From the project root, run:
+
+```bash
+docker compose up --build
+```
+
+This will:
+
+- Build the backend and frontend images
+- Start the Express backend on port **3000**
+- Start the React frontend on port **5173**
+- Create a persistent Docker volume for the SQLite database
+
+## Access the application
+
+Frontend:
+
+```
+http://localhost:5173
+```
+
+Backend:
+
+```
+http://localhost:3000
+```
+
+## Stopping the application
+
+```bash
+docker compose down
+```
+
+## Rebuilding after code changes
+
+```bash
+docker compose up --build
+```
+
+## Database Persistence
+
+The SQLite database is stored in a Docker named volume, so tickets, approvals, evaluation data, and AgentRun records are preserved across container restarts.
+
 ---
 
 # Demo Workflow
