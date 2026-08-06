@@ -1,7 +1,7 @@
 FROM node:lts-alpine
 
 WORKDIR /app
-ENV DATABASE_URL="file:./dev.db"
+ENV DATABASE_URL="file:./prisma/dev.db"
 
 COPY package*.json ./
 RUN npm ci
