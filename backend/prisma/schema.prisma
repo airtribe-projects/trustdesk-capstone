@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  customerId String   @id @map("customer_id")
+  name       String
+  email      String   @unique
+  tier       String
+  country    String
+  createdAt  DateTime @map("created_at")
+  verified   Boolean
+  tags       String   @default("[]") // JSON-serialized string array
+
+  orders  Order[]
+  tickets Ticket[]
+
+  @@map("customers")
+}
+
+model Order {
+  orderId             String    @id @map("order_id")
+  customerId          String    @map("customer_id")
+  status              String
+  placedAt            DateTime  @map("placed_at")
+  deliveredAt         DateTime? @map("delivered_at")
+  eligibleReturnUntil DateTime? @map("eligible_return_until")
+  total               Float
+  currency            String
+  paymentStatus       String    @map("payment_status")
+  trackingNumber      String?   @map("tracking_number")
+  items               String    @default("[]") // JSON-serialized order items
+
+  customer Customer @relation(fields: [customerId], references: [customerId])
+  tickets  Ticket[]  @relation("OrderTickets")
+
+  @@index([customerId])
+  @@map("orders")
+}
+
+model Ticket {
+  ticketId String    @id @map("ticket_id")
+  customerId String  @map("customer_id")
+  orderId String?    @map("order_id")
+  channel String
+  subject String
+  body String
+  createdAt DateTime @map("created_at")
+  status String
+
+  // Evaluation-only fixture metadata; not for production decision-making.
+  expectedCategory   String?  @map("expected_category")
+  expectedPriority   String?  @map("expected_priority")
+  expectedSentiment  String?  @map("expected_sentiment")
+  expectedEscalation Boolean? @map("expected_escalation")
+  expectedActions    String   @default("[]") @map("expected_actions") // JSON-serialized string array
+
+  customer    Customer     @relation(fields: [customerId], references: [customerId])
+  order       Order?       @relation("OrderTickets", fields: [orderId], references: [orderId])
+  toolActions ToolAction[]
+  agentRuns   AgentRun[]
+
+  @@index([customerId])
+  @@index([orderId])
+  @@map("tickets")
+}
+
+model KnowledgeDocument {
+  docId      String   @id @map("doc_id")
+  title      String
+  content    String
+  sourcePath String   @map("source_path")
+  version    String
+  audience   String
+  updatedAt  DateTime @default(now()) @map("updated_at")
+
+  @@map("knowledge_documents")
+}
+
+model ToolAction {
+  actionId              String   @id @default(cuid()) @map("action_id")
+  ticketId              String   @map("ticket_id")
+  toolName              String   @map("tool_name")
+  payload               String   @default("{}") // JSON-serialized action payload
+  riskLevel             String   @map("risk_level")
+  requiresHumanApproval Boolean  @map("requires_human_approval")
+  status                String   @default("pending")
+  idempotencyKey        String   @unique @map("idempotency_key")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  ticket   Ticket   @relation(fields: [ticketId], references: [ticketId])
+  approval Approval?
+
+  @@index([ticketId])
+  @@map("tool_actions")
+}
+
+model Approval {
+  approvalId String   @id @default(cuid()) @map("approval_id")
+  actionId   String   @unique @map("action_id")
+  reviewerId String   @map("reviewer_id")
+  decision   String
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  toolAction ToolAction @relation(fields: [actionId], references: [actionId])
+
+  @@map("approvals")
+}
+
+model AgentRun {
+  runId             String   @id @default(cuid()) @map("run_id")
+  ticketId          String   @map("ticket_id")
+  runType           String   @map("run_type")
+  status            String
+  retrievedDocIds   String   @default("[]") @map("retrieved_doc_ids") // JSON-serialized string array
+  toolCalls         String   @default("[]") @map("tool_calls") // JSON-serialized array
+  guardrailResults  String   @default("{}") @map("guardrail_results") // JSON-serialized object
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  ticket Ticket @relation(fields: [ticketId], references: [ticketId])
+
+  @@index([ticketId])
+  @@map("agent_runs")
+}
