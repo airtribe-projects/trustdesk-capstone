@@ -314,6 +314,53 @@ The evaluation benchmark measures:
 
 ---
 
+# Docker
+
+## Prerequisites
+
+- Docker Desktop (or Docker Engine with the Compose plugin)
+- A valid `GEMINI_API_KEY` in `backend/.env`
+
+The backend environment file must include at least:
+
+```env
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+```
+
+## Build and start
+
+From the project root:
+
+```bash
+docker compose up --build
+```
+
+The frontend is available at `http://localhost:5173` and the backend at `http://localhost:3000`.
+
+The Compose setup gives the frontend a Docker-network backend target while preserving the existing local-development proxy target. The SQLite database is stored in a named Docker volume and persists across container restarts.
+
+## Stop
+
+```bash
+docker compose down
+```
+
+This stops the containers and retains the SQLite volume. To also remove persisted Docker data, run:
+
+```bash
+docker compose down --volumes
+```
+
+## Rebuild
+
+After Docker-related or dependency changes:
+
+```bash
+docker compose up --build
+```
+
+---
+
 # Author
 
 **Rudransh Singh**

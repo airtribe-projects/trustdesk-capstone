@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: 3000
+      DATABASE_URL: file:./dev.db
+    volumes:
+      - backend_prisma_data:/app/prisma
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_PROXY_TARGET: http://backend:3000
+    depends_on:
+      - backend
+
+volumes:
+  backend_prisma_data:
