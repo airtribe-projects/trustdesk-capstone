@@ -1,4 +1,6 @@
 const express = require("express");
+const cors = require("cors");
+
 
 const aiRoutes = require("./routes/aiRoutes");
 const demoRoutes = require("./routes/demoRoutes");
@@ -9,6 +11,15 @@ const toolActionRoutes = require("./routes/toolActionRoutes");
 const { notFoundHandler, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://trustdesk-capstone-airtribe.vercel.app",
+    ],
+  })
+);
 
 app.use(express.json());
 
