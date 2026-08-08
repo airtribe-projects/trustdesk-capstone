@@ -156,7 +156,7 @@ const ReplyCard = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', color: 'var(--slate-700)', fontSize: '0.8rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   <UserCheck size={14} />
-                  <span>Reviewed by: <strong>{replyData.approved_by || 'Sarah Jenkins (Lead Agent)'}</strong></span>
+                  <span>Reviewed by: <strong>{replyData.approved_by || 'Abhishek Prasad (Lead Agent)'}</strong></span>
                 </div>
                 {replyData.review_comment && (
                   <div>Comment: {replyData.review_comment}</div>

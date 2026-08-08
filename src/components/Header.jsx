@@ -38,7 +38,7 @@ const Header = ({ title, activeTicketId, onSearchKnowledge, setActiveTab }) => {
         <div className="agent-profile">
           <div className="agent-avatar">SA</div>
           <div className="agent-info">
-            <span className="agent-name">Sarah Jenkins</span>
+            <span className="agent-name">Abhishek Prasad</span>
             <span className="agent-role">Tier-3 AI Support Lead</span>
           </div>
         </div>

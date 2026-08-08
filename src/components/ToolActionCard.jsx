@@ -131,7 +131,7 @@ const ToolActionCard = ({
                 </button>
               ) : (
                 <span className="badge badge-success">
-                  By {toolExecution.approved_by || 'Sarah Jenkins'}
+                  By {toolExecution.approved_by || 'Abhishek Prasad'}
                 </span>
               )}
             </div>

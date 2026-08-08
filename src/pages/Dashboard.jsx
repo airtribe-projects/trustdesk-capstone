@@ -156,9 +156,9 @@ const Dashboard = ({ addToast }) => {
   const handleApproveReply = async (ticketId) => {
     setIsApprovingReply(true);
     try {
-      const res = await approveReply(ticketId, 'Sarah Jenkins (Lead Agent)');
+      const res = await approveReply(ticketId, 'Abhishek Prasad (Lead Agent)');
       if (res.draft) setReplyData(res.draft);
-      else setReplyData(prev => prev ? { ...prev, status: 'Approved', approved: true, approved_by: 'Sarah Jenkins (Lead Agent)' } : null);
+      else setReplyData(prev => prev ? { ...prev, status: 'Approved', approved: true, approved_by: 'Abhishek Prasad (Lead Agent)' } : null);
 
       addToast({
         type: 'success',
@@ -229,9 +229,9 @@ const Dashboard = ({ addToast }) => {
   const handleApproveTool = async (executionId) => {
     setIsApprovingTool(true);
     try {
-      const res = await approveToolAction(executionId, 'Sarah Jenkins');
+      const res = await approveToolAction(executionId, 'Abhishek Prasad');
       if (res.tool_action) setToolExecution(res.tool_action);
-      else setToolExecution(prev => prev ? { ...prev, status: 'Approved', approved_by: 'Sarah Jenkins' } : null);
+      else setToolExecution(prev => prev ? { ...prev, status: 'Approved', approved_by: 'Abhishek Prasad' } : null);
 
       addToast({
         type: 'success',
