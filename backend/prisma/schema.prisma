@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ToolStatus {
+  PENDING
+  APPROVED
+  EXECUTED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("support_agent")
+  createdAt    DateTime @default(now())
+}
+
+model Customer {
+  id        String   @id
+  name      String
+  email     String   @unique
+  tier      String   @default("standard")
+  country   String   @default("IN")
+  verified  Boolean  @default(false)
+  tags      String   @default("[]")
+  createdAt DateTime @default(now())
+
+  orders  Order[]
+  tickets Ticket[]
+}
+
+model Order {
+  id                  String    @id
+  customerId          String
+  orderDate           DateTime
+  status              String
+  deliveredAt         DateTime?
+  eligibleReturnUntil DateTime?
+  total               Int       @default(0)
+  currency            String    @default("INR")
+  paymentStatus       String    @default("paid")
+  trackingNumber      String?
+  items               String    @default("[]")
+  createdAt           DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  tickets  Ticket[]
+}
+
+model Ticket {
+  id         String       @id
+  customerId String
+  orderId    String?
+  channel    String       @default("email")
+  subject    String
+  message    String
+  status     TicketStatus @default(OPEN)
+  createdAt  DateTime
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  order    Order?   @relation(fields: [orderId], references: [id])
+
+  triage      TriageResult?
+  draft       DraftReply?
+  approvals   Approval[]
+  toolActions ToolAction[]
+  traces      Trace[]
+}
+
+model TriageResult {
+  id             String   @id @default(cuid())
+  ticketId       String   @unique
+  category       String
+  priority       String
+  sentiment      String
+  shouldEscalate Boolean
+  reasonSummary  String
+  createdAt      DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+}
+
+model DraftReply {
+  id                 String   @id @default(cuid())
+  ticketId           String   @unique
+  content            String
+  citations          String   @default("[]")
+  recommendedActions String   @default("[]")
+  guardrailBlocked   Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+}
+
+model KnowledgeDocument {
+  id       String @id
+  title    String
+  category String
+  content  String
+}
+
+model Approval {
+  id         String    @id @default(cuid())
+  ticketId   String
+  toolName   String
+  approved   Boolean   @default(false)
+  approvedBy String?
+  approvedAt DateTime?
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+}
+
+model ToolAction {
+  id             String     @id @default(cuid())
+  ticketId       String
+  toolName       String
+  params         String     @default("{}")
+  status         ToolStatus @default(PENDING)
+  idempotencyKey String     @unique
+  result         String?
+  approvalId     String?
+  createdAt      DateTime   @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+}
+
+model Trace {
+  id            String   @id @default(cuid())
+  ticketId      String
+  runType       String
+  retrievedDocs String   @default("[]")
+  toolAction    String?
+  guardrail     String   @default("{}")
+  finalStatus   String
+  createdAt     DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+}
+

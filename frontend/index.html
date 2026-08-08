@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustDesk — AI Support Operations</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+    
+    /* Auth */
+    #auth-view { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .auth-card { background: white; border-radius: 12px; padding: 40px; width: 380px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
+    .auth-card h1 { font-size: 24px; margin-bottom: 8px; color: #1a1a2e; }
+    .auth-card p { color: #666; margin-bottom: 24px; font-size: 14px; }
+    
+    /* Layout */
+    #app { display: none; height: 100vh; display: flex; flex-direction: column; }
+    .header { background: #1a1a2e; color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+    .main { display: flex; flex: 1; overflow: hidden; }
+    
+    /* Sidebar */
+    .sidebar { width: 280px; background: white; border-right: 1px solid #e5e7eb; overflow-y: auto; display: flex; flex-direction: column; }
+    .sidebar-nav { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+    .nav-btn { display: block; width: 100%; padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; text-align: left; background: transparent; color: #374151; margin-bottom: 4px; transition: all 0.15s; }
+    .nav-btn:hover, .nav-btn.active { background: #f3f4f6; color: #1a1a2e; font-weight: 500; }
+    .ticket-list { flex: 1; overflow-y: auto; }
+    .ticket-item { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.15s; }
+    .ticket-item:hover { background: #f9fafb; }
+    .ticket-item.active { background: #eff6ff; border-left: 3px solid #3b82f6; }
+    .ticket-item .ticket-id { font-size: 11px; color: #9ca3af; font-family: monospace; }
+    .ticket-item .ticket-subject { font-size: 13px; font-weight: 500; color: #111827; margin: 2px 0; }
+    .ticket-item .ticket-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    
+    /* Content */
+    .content { flex: 1; overflow-y: auto; padding: 24px; }
+    .panel { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .panel h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #111827; }
+    .panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+    
+    /* Forms */
+    input, textarea, select { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.15s; font-family: inherit; }
+    input:focus, textarea:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+    textarea { resize: vertical; min-height: 80px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
+    .form-group { margin-bottom: 16px; }
+    
+    /* Buttons */
+    .btn { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+    .btn-success { background: #10b981; color: white; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-ghost { background: transparent; color: #6b7280; border: 1px solid #d1d5db; }
+    .btn-ghost:hover { background: #f9fafb; }
+    .btn-sm { padding: 5px 12px; font-size: 13px; }
+    
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-yellow { background: #fef9c3; color: #854d0e; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-purple { background: #f3e8ff; color: #7c3aed; }
+    .badge-gray { background: #f3f4f6; color: #6b7280; }
+    .badge-orange { background: #ffedd5; color: #c2410c; }
+    
+    /* Alert */
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+    .alert-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+    .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    
+    /* Citations */
+    .citations { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .citation { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-family: monospace; }
+    
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    
+    /* Info row */
+    .info-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; font-size: 14px; }
+    .info-item { display: flex; flex-direction: column; }
+    .info-item .label { font-size: 11px; color: #9ca3af; font-weight: 500; text-transform: uppercase; margin-bottom: 2px; }
+    .info-item .value { font-weight: 500; color: #111827; }
+    
+    /* Message box */
+    .message-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: #374151; }
+    
+    /* Tab */
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px; }
+    .tab { padding: 8px 16px; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; color: #6b7280; background: none; border-top: none; border-left: none; border-right: none; transition: all 0.15s; }
+    .tab.active { border-bottom-color: #3b82f6; color: #3b82f6; font-weight: 500; }
+    
+    /* Eval */
+    .stat-card { background: #f9fafb; border-radius: 8px; padding: 16px; text-align: center; }
+    .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+    .stat-card .stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    .eval-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 6px; }
+    .eval-row.pass { background: #f0fdf4; }
+    .eval-row.fail { background: #fef2f2; }
+    
+    /* Loading */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Divider */
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 16px 0; }
+    
+    /* Code */
+    pre { background: #1e293b; color: #e2e8f0; padding: 14px; border-radius: 8px; font-size: 12px; overflow-x: auto; line-height: 1.5; }
+    
+    .empty-state { text-align: center; padding: 40px; color: #9ca3af; font-size: 14px; }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+
+    #app { display: none; }
+    #app.visible { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<!-- Auth View -->
+<div id="auth-view">
+  <div class="auth-card">
+    <h1>🛡️ TrustDesk</h1>
+    <p>AI Support Operations Platform</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" value="agent@trustdesk.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" value="trustdesk123" />
+    </div>
+    <div id="login-error" class="alert alert-danger" style="display:none"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="login()">Sign In</button>
+    <p style="margin-top:12px;font-size:12px;color:#9ca3af;text-align:center">Demo: agent@trustdesk.com / trustdesk123</p>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+  <div class="header">
+    <h1>🛡️ TrustDesk</h1>
+    <div class="header-right">
+      <span id="user-label" style="color:#9ca3af;font-size:13px"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()" style="color:white;border-color:#374151">Sign Out</button>
+    </div>
+  </div>
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-nav">
+        <button class="nav-btn active" id="nav-tickets" onclick="showView('tickets')">🎫 Tickets</button>
+        <button class="nav-btn" id="nav-approvals" onclick="showView('approvals')">✅ Approvals</button>
+        <button class="nav-btn" id="nav-knowledge" onclick="showView('knowledge')">📚 Knowledge Base</button>
+        <button class="nav-btn" id="nav-eval" onclick="showView('eval')">📊 Eval Runner</button>
+      </div>
+      <div id="ticket-sidebar" class="ticket-list"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Tickets View -->
+      <div id="view-tickets">
+        <div id="ticket-detail-area">
+          <div class="empty-state">
+            <div class="icon">🎫</div>
+            <p>Select a ticket from the sidebar to get started</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approvals View -->
+      <div id="view-approvals" style="display:none">
+        <div class="panel">
+          <h2>Pending Approvals</h2>
+          <div id="approvals-list"></div>
+        </div>
+      </div>
+
+      <!-- Knowledge View -->
+      <div id="view-knowledge" style="display:none">
+        <div class="panel">
+          <h2>Knowledge Base</h2>
+          <div class="form-group" style="display:flex;gap:8px">
+            <input type="text" id="kb-search-input" placeholder="Search knowledge base..." />
+            <button class="btn btn-primary" onclick="searchKB()">Search</button>
+          </div>
+          <div id="kb-results"></div>
+          <hr class="divider" />
+          <h3>Indexed Documents</h3>
+          <div id="kb-docs-list"></div>
+        </div>
+      </div>
+
+      <!-- Eval View -->
+      <div id="view-eval" style="display:none">
+        <div class="panel">
+          <h2>Evaluation Runner</h2>
+          <p style="font-size:14px;color:#6b7280;margin-bottom:16px">Run all eval cases from <code>data/eval_cases.jsonl</code> and generate a quality report.</p>
+          <button class="btn btn-primary" id="run-eval-btn" onclick="runEval()">▶ Run Eval Cases</button>
+        </div>
+        <div id="eval-results"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+let token = localStorage.getItem('trustdesk_token') || '';
+let currentTicketId = null;
+
+// --- Auth ---
+async function login() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    token = data.token;
+    localStorage.setItem('trustdesk_token', token);
+    document.getElementById('user-label').textContent = data.user.email;
+    document.getElementById('auth-view').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    loadTickets();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function logout() {
+  token = '';
+  localStorage.removeItem('trustdesk_token');
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('auth-view').style.display = 'flex';
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(`${API}${path}`, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(opts.headers || {}) },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`);
+  return data;
+}
+
+// --- Navigation ---
+function showView(view) {
+  ['tickets','approvals','knowledge','eval'].forEach(v => {
+    document.getElementById(`view-${v}`).style.display = v === view ? 'block' : 'none';
+    document.getElementById(`nav-${v}`)?.classList.toggle('active', v === view);
+  });
+  document.getElementById('ticket-sidebar').style.display = view === 'tickets' ? 'block' : 'none';
+  if (view === 'approvals') loadApprovals();
+  if (view === 'knowledge') loadKBDocs();
+  if (view === 'eval') loadEvalResults();
+}
+
+// --- Tickets ---
+async function loadTickets() {
+  try {
+    const data = await api('/tickets');
+    const sidebar = document.getElementById('ticket-sidebar');
+    sidebar.innerHTML = data.tickets.map(t => `
+      <div class="ticket-item ${t.id === currentTicketId ? 'active' : ''}" onclick="selectTicket('${t.id}')">
+        <div class="ticket-id">${t.id}</div>
+        <div class="ticket-subject">${escHtml(t.subject)}</div>
+        <div class="ticket-meta">
+          ${priorityBadge(t.triage?.priority || 'unknown')}
+          ${categoryBadge(t.triage?.category || '')}
+          ${t.triage?.shouldEscalate ? '<span class="badge badge-red">Escalate</span>' : ''}
+        </div>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function selectTicket(id) {
+  currentTicketId = id;
+  document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.ticket-item').forEach(el => {
+    if (el.querySelector('.ticket-id')?.textContent === id) el.classList.add('active');
+  });
+  await renderTicketDetail(id);
+}
+
+async function renderTicketDetail(id) {
+  const area = document.getElementById('ticket-detail-area');
+  area.innerHTML = '<div style="padding:40px;text-align:center"><span class="spinner"></span> Loading...</div>';
+  try {
+    const data = await api(`/tickets/${id}`);
+    const t = data.ticket;
+    const order = t.order;
+    const customer = t.customer;
+
+    area.innerHTML = `
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+          <div>
+            <div style="font-size:12px;color:#9ca3af;font-family:monospace;margin-bottom:4px">${t.id}</div>
+            <h2 style="margin:0;font-size:20px">${escHtml(t.subject)}</h2>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${priorityBadge(t.triage?.priority || 'unknown', 'lg')}
+            ${categoryBadge(t.triage?.category || 'unclassified')}
+            ${t.triage?.shouldEscalate ? '<span class="badge badge-red">⚠ Escalate</span>' : ''}
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-item"><span class="label">Customer</span><span class="value">${escHtml(customer.name)} <span class="badge ${customer.tier === 'gold' ? 'badge-yellow' : 'badge-gray'}">${customer.tier}</span></span></div>
+          <div class="info-item"><span class="label">Channel</span><span class="value">${t.channel}</span></div>
+          <div class="info-item"><span class="label">Created</span><span class="value">${new Date(t.createdAt).toLocaleDateString()}</span></div>
+          ${order ? `<div class="info-item"><span class="label">Order</span><span class="value">${order.id} — ₹${order.total?.toLocaleString()}</span></div>` : ''}
+        </div>
+
+        <div class="message-box">${escHtml(t.message)}</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2>AI Triage</h2>
+          ${t.triage ? `
+            <div class="info-row">
+              <div class="info-item"><span class="label">Category</span><span class="value">${categoryBadge(t.triage.category)}</span></div>
+              <div class="info-item"><span class="label">Priority</span><span class="value">${priorityBadge(t.triage.priority)}</span></div>
+              <div class="info-item"><span class="label">Sentiment</span><span class="value">${t.triage.sentiment}</span></div>
+              <div class="info-item"><span class="label">Escalate</span><span class="value">${t.triage.shouldEscalate ? '✅ Yes' : '❌ No'}</span></div>
+            </div>
+            <p style="font-size:13px;color:#374151;margin-top:8px">${escHtml(t.triage.reasonSummary)}</p>
+          ` : '<p style="color:#9ca3af;font-size:14px">Not yet triaged</p>'}
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="runTriage('${id}')">▶ Run Triage</button>
+          </div>
+        </div>
+
+        ${order ? `
+        <div class="panel">
+          <h2>Order Context</h2>
+          <div class="info-row">
+            <div class="info-item"><span class="label">Status</span><span class="value">${order.status}</span></div>
+            <div class="info-item"><span class="label">Total</span><span class="value">₹${order.total?.toLocaleString()}</span></div>
+            <div class="info-item"><span class="label">Return Until</span><span class="value">${order.eligibleReturnUntil ? new Date(order.eligibleReturnUntil).toLocaleDateString() : 'N/A'}</span></div>
+          </div>
+          ${order.items?.length > 0 ? `<div style="font-size:13px;color:#374151">Items: ${order.items.map(i => i.name).join(', ')}</div>` : ''}
+        </div>` : ''}
+      </div>
+
+      <div class="panel" id="draft-panel">
+        <h2>Draft Reply</h2>
+        ${t.draft ? renderDraft(t.draft) : '<p style="color:#9ca3af;font-size:14px">No draft yet</p>'}
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="runDraft('${id}')">✍ Generate Draft</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Tool Actions</h2>
+        ${t.toolActions.length === 0 ? '<p style="color:#9ca3af;font-size:14px">No tool actions yet</p>' : ''}
+        ${t.toolActions.map(a => `
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong style="font-size:13px">${a.toolName}</strong>
+              ${toolStatusBadge(a.status)}
+            </div>
+            <div style="font-size:12px;color:#9ca3af;margin-top:4px">ID: ${a.id}</div>
+            ${a.status === 'PENDING' ? `
+              <div style="margin-top:8px;display:flex;gap:8px">
+                <button class="btn btn-success btn-sm" onclick="approveTool('${a.id}', '${id}')">✓ Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="rejectTool('${a.id}', '${id}')">✗ Reject</button>
+              </div>` : ''}
+          </div>
+        `).join('')}
+
+        <hr class="divider" />
+        <h3>Request Tool Action</h3>
+        <div class="grid-2" style="margin-bottom:8px">
+          <div class="form-group">
+            <label>Tool</label>
+            <select id="tool-select-${id}">
+              <option value="start_refund_review">start_refund_review</option>
+              <option value="create_replacement_order">create_replacement_order</option>
+              <option value="open_carrier_investigation">open_carrier_investigation</option>
+              <option value="escalate_to_human">escalate_to_human</option>
+              <option value="issue_coupon">issue_coupon</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Reason</label>
+            <input type="text" id="tool-reason-${id}" placeholder="Reason for action" />
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="requestTool('${id}')">+ Request Tool Action</button>
+      </div>
+
+      <div class="panel">
+        <h2>Trace Log</h2>
+        ${t.traces.length === 0 ? '<p style="color:#9ca3af;font-size:14px">No traces yet</p>' : ''}
+        ${t.traces.slice(0,5).map(tr => `
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px">
+            <div style="display:flex;justify-content:space-between">
+              <strong>${tr.runType}</strong>
+              <span style="color:#9ca3af;font-size:12px">${new Date(tr.createdAt).toLocaleString()}</span>
+            </div>
+            <div style="color:#374151;margin-top:4px">Status: ${tr.finalStatus}</div>
+            <div style="color:#374151">Guardrail: ${tr.guardrail?.blocked ? '🛑 Blocked — ' + tr.guardrail.reason : '✅ Passed'}</div>
+            ${tr.retrievedDocs?.length > 0 ? `<div class="citations">${tr.retrievedDocs.map(d => `<span class="citation">${d}</span>`).join('')}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch(e) {
+    area.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  }
+}
+
+function renderDraft(draft) {
+  return `
+    <div class="${draft.guardrailBlocked ? 'alert alert-warning' : ''}">
+      ${draft.guardrailBlocked ? '<strong>⚠ Guardrail Active</strong><br>' : ''}
+    </div>
+    <div class="message-box" style="margin-bottom:12px">${escHtml(draft.content)}</div>
+    ${draft.citations?.length > 0 ? `
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">CITATIONS</div>
+        <div class="citations">${draft.citations.map(c => `<span class="citation">${c}</span>`).join('')}</div>
+      </div>` : ''}
+    ${draft.recommendedActions?.length > 0 ? `
+      <div style="margin-top:10px">
+        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">RECOMMENDED ACTIONS</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${draft.recommendedActions.map(a => `<span class="badge badge-purple">${a}</span>`).join('')}</div>
+      </div>` : ''}
+  `;
+}
+
+async function runTriage(ticketId) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Running...';
+  try {
+    await api(`/tickets/${ticketId}/triage`, { method: 'POST' });
+    await renderTicketDetail(ticketId);
+    await loadTickets();
+  } catch(e) {
+    alert('Triage failed: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '▶ Run Triage';
+  }
+}
+
+async function runDraft(ticketId) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+  try {
+    await api(`/tickets/${ticketId}/draft`, { method: 'POST' });
+    await renderTicketDetail(ticketId);
+  } catch(e) {
+    alert('Draft failed: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✍ Generate Draft';
+  }
+}
+
+async function requestTool(ticketId) {
+  const toolName = document.getElementById(`tool-select-${ticketId}`).value;
+  const reason = document.getElementById(`tool-reason-${ticketId}`).value;
+  const idempotencyKey = `${ticketId}-${toolName}-${Date.now()}`;
+  try {
+    await api(`/tickets/${ticketId}/tools`, {
+      method: 'POST',
+      body: JSON.stringify({ toolName, params: { reason }, idempotencyKey }),
+    });
+    await renderTicketDetail(ticketId);
+  } catch(e) {
+    alert('Tool request failed: ' + e.message);
+  }
+}
+
+async function approveTool(toolActionId, ticketId) {
+  try {
+    await api(`/approvals/${toolActionId}/approve`, { method: 'POST' });
+    await renderTicketDetail(ticketId);
+  } catch(e) { alert('Approve failed: ' + e.message); }
+}
+
+async function rejectTool(toolActionId, ticketId) {
+  try {
+    await api(`/approvals/${toolActionId}/reject`, { method: 'POST' });
+    await renderTicketDetail(ticketId);
+  } catch(e) { alert('Reject failed: ' + e.message); }
+}
+
+// --- Approvals ---
+async function loadApprovals() {
+  const el = document.getElementById('approvals-list');
+  el.innerHTML = '<span class="spinner"></span> Loading...';
+  try {
+    const data = await api('/approvals');
+    if (data.approvals.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>No pending approvals</p></div>';
+      return;
+    }
+    el.innerHTML = data.approvals.map(a => `
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <strong>${a.toolName}</strong>
+            <span style="font-size:12px;color:#9ca3af;font-family:monospace;margin-left:8px">${a.id}</span>
+          </div>
+          ${toolStatusBadge(a.status)}
+        </div>
+        <div class="info-row">
+          <div class="info-item"><span class="label">Ticket</span><span class="value">${a.ticketId}</span></div>
+          <div class="info-item"><span class="label">Customer</span><span class="value">${a.ticket?.customer?.name || 'Unknown'} <span class="badge ${a.ticket?.customer?.tier === 'gold' ? 'badge-yellow' : 'badge-gray'}">${a.ticket?.customer?.tier || ''}</span></span></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-success btn-sm" onclick="approveFromList('${a.id}')">✓ Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectFromList('${a.id}')">✗ Reject</button>
+          <button class="btn btn-ghost btn-sm" onclick="selectTicket('${a.ticketId}');showView('tickets')">View Ticket</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  }
+}
+
+async function approveFromList(id) {
+  try {
+    await api(`/approvals/${id}/approve`, { method: 'POST' });
+    loadApprovals();
+  } catch(e) { alert(e.message); }
+}
+
+async function rejectFromList(id) {
+  try {
+    await api(`/approvals/${id}/reject`, { method: 'POST' });
+    loadApprovals();
+  } catch(e) { alert(e.message); }
+}
+
+// --- Knowledge Base ---
+async function loadKBDocs() {
+  const el = document.getElementById('kb-docs-list');
+  try {
+    const data = await api('/knowledge');
+    el.innerHTML = data.documents.map(d => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:6px;background:#f9fafb;margin-bottom:4px;font-size:13px">
+        <span class="citation">${d.id}</span>
+        <span style="flex:1;margin:0 12px">${d.title}</span>
+        <span class="badge badge-gray">${d.category}</span>
+      </div>
+    `).join('') || '<p style="color:#9ca3af">No documents indexed</p>';
+  } catch(e) { el.innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+}
+
+async function searchKB() {
+  const q = document.getElementById('kb-search-input').value;
+  const el = document.getElementById('kb-results');
+  if (!q) return;
+  el.innerHTML = '<span class="spinner"></span>';
+  try {
+    const data = await api(`/knowledge/search?q=${encodeURIComponent(q)}`);
+    el.innerHTML = data.results.length === 0 ? '<p style="color:#9ca3af">No results</p>' : data.results.map(r => `
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span class="citation">${r.doc_id}</span>
+          <span style="font-size:12px;color:#9ca3af">score: ${r.score.toFixed(2)}</span>
+        </div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:4px">${r.title}</div>
+        <div style="font-size:13px;color:#374151">${escHtml(r.snippet)}</div>
+      </div>
+    `).join('');
+  } catch(e) { el.innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+}
+
+// --- Eval ---
+async function runEval() {
+  const btn = document.getElementById('run-eval-btn');
+  const el = document.getElementById('eval-results');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Running eval cases...';
+  el.innerHTML = '<div class="alert alert-info">Running evaluation... this may take a few minutes with OpenAI API calls.</div>';
+  try {
+    const data = await api('/eval/run', { method: 'POST' });
+    renderEvalReport(data);
+  } catch(e) {
+    el.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '▶ Run Eval Cases';
+  }
+}
+
+async function loadEvalResults() {
+  try {
+    const data = await api('/eval/results');
+    renderEvalReport(data);
+  } catch(e) {
+    if (!e.message.includes('No eval results')) {
+      document.getElementById('eval-results').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+    }
+  }
+}
+
+function renderEvalReport(data) {
+  const s = data.summary;
+  const el = document.getElementById('eval-results');
+  el.innerHTML = `
+    <div class="panel">
+      <h2>Evaluation Summary</h2>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-card">
+          <div class="stat-value">${s.passed}/${s.total}</div>
+          <div class="stat-label">Cases Passed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${(parseFloat(s.category_accuracy)*100).toFixed(0)}%</div>
+          <div class="stat-label">Category Accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${(parseFloat(s.priority_accuracy)*100).toFixed(0)}%</div>
+          <div class="stat-label">Priority Accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${(parseFloat(s.citation_coverage)*100).toFixed(0)}%</div>
+          <div class="stat-label">Citation Coverage</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${(parseFloat(s.unsafe_action_block_rate)*100).toFixed(0)}%</div>
+          <div class="stat-label">Unsafe Block Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${(parseFloat(s.escalation_accuracy)*100).toFixed(0)}%</div>
+          <div class="stat-label">Escalation Accuracy</div>
+        </div>
+      </div>
+
+      <h3>Per-Case Results</h3>
+      ${data.results.map(r => `
+        <div class="eval-row ${r.passed ? 'pass' : 'fail'}">
+          <span>${r.passed ? '✅' : '❌'}</span>
+          <span style="font-family:monospace;font-weight:600;min-width:80px">${r.case_id}</span>
+          <span style="color:#9ca3af;min-width:80px">${r.ticket_id}</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="badge ${r.category_match ? 'badge-green' : 'badge-red'}">Category ${r.category_match ? '✓' : '✗'}</span>
+            <span class="badge ${r.priority_match ? 'badge-green' : 'badge-red'}">Priority ${r.priority_match ? '✓' : '✗'}</span>
+            <span class="badge ${r.escalation_match ? 'badge-green' : 'badge-red'}">Escalation ${r.escalation_match ? '✓' : '✗'}</span>
+            <span class="badge ${r.citations_covered ? 'badge-green' : 'badge-red'}">Citations ${r.citations_covered ? '✓' : '✗'}</span>
+            <span class="badge ${r.unsafe_action_blocked ? 'badge-green' : 'badge-red'}">Safe ${r.unsafe_action_blocked ? '✓' : '✗'}</span>
+          </div>
+          ${r.error ? `<span style="color:#dc2626;font-size:12px">Error: ${r.error}</span>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// --- Helpers ---
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function priorityBadge(p, size) {
+  const map = { low: 'badge-gray', medium: 'badge-blue', high: 'badge-orange', urgent: 'badge-red', unknown: 'badge-gray' };
+  return `<span class="badge ${map[p] || 'badge-gray'}">${p}</span>`;
+}
+
+function categoryBadge(c) {
+  const map = { shipping: 'badge-blue', refund: 'badge-green', warranty: 'badge-purple', billing: 'badge-yellow', account_security: 'badge-red', general: 'badge-gray' };
+  if (!c) return '';
+  return `<span class="badge ${map[c] || 'badge-gray'}">${c}</span>`;
+}
+
+function toolStatusBadge(s) {
+  const map = { PENDING: 'badge-yellow', APPROVED: 'badge-green', EXECUTED: 'badge-green', REJECTED: 'badge-red' };
+  return `<span class="badge ${map[s] || 'badge-gray'}">${s}</span>`;
+}
+
+// --- Init ---
+if (token) {
+  fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      document.getElementById('user-label').textContent = data.user.email;
+      document.getElementById('auth-view').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      loadTickets();
+    })
+    .catch(() => { token = ''; localStorage.removeItem('trustdesk_token'); });
+}
+</script>
+</body>
+</html>
