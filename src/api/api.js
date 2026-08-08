@@ -30,9 +30,18 @@ const handleApiError = (error, defaultMsg) => {
 // TICKET API ENDPOINTS
 // ==========================================
 
+// export const fetchTickets = async () => {
+//   try {
+//     const response = await apiClient.get('/tickets');
+//     return response.data;
+//   } catch (err) {
+//     throw new Error(handleApiError(err, 'Failed to fetch tickets list'));
+//   }
+// };
+
 export const fetchTickets = async () => {
   try {
-    const response = await apiClient.get('/tickets');
+    const response = await apiClient.get('/tickets/');
     return response.data;
   } catch (err) {
     throw new Error(handleApiError(err, 'Failed to fetch tickets list'));
