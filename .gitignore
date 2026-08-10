@@ -3,4 +3,29 @@ trustdesk_seed.db
 *.sqlite3
 __pycache__/
 .DS_Store
+.env
 
+# Python
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+
+# Database
+*.db
+backend/trustdesk.db
+
+# Node
+node_modules/
+
+# Build
+dist/
+
+# Environment
+.env
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store

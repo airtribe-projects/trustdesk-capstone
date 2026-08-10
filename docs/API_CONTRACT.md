@@ -1,3 +1,4 @@
+
 # TrustDesk API Contract
 
 This document describes the expected product and API behavior without requiring any specific programming language or framework.
