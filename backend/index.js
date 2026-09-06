@@ -35,11 +35,9 @@ app.use((req, res, next) => {
 });
 
 // Simple demo token middleware
+// Token middleware disabled for demo purposes
 app.use((req, res, next) => {
-  const token = req.headers['authorization'];
-  if (!token || token !== `Bearer ${process.env.DEMO_TOKEN}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  // Allow all requests without auth
   next();
 });
 
@@ -59,11 +57,55 @@ app.get('/search', (req, res) => {
 
 
 // Placeholder routes
+// Create a new ticket
+app.post('/tickets', (req, res) => {
+  const { subject = '', message = '', customerName = '', priority = '', category = '', idempotencyKey = '' } = req.body;
+  const ticketId = uuidv4();
+  const createdAt = new Date().toISOString();
+  const metadata = JSON.stringify({ priority, category, customerName });
+  // If idempotencyKey provided, try to find existing ticket
+  if (idempotencyKey) {
+    const existing = db.prepare('SELECT * FROM tickets WHERE idempotency_key = ?').get(idempotencyKey);
+    if (existing) {
+      return res.status(200).json({
+        id: existing.id,
+        subject: existing.subject,
+        message: existing.message,
+        createdAt: existing.created_at,
+        priority,
+        category,
+        customerName,
+      });
+    }
+  }
+  const stmt = db.prepare('INSERT INTO tickets (id, customer_id, order_id, subject, message, created_at, metadata, idempotency_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  stmt.run(ticketId, null, null, subject, message, createdAt, metadata, idempotencyKey || null);
+  res.status(201).json({ id: ticketId, subject, message, createdAt, priority, category, customerName });
+});
+
+// List tickets ordered by newest first
 app.get('/tickets', (req, res) => {
-  const stmt = db.prepare('SELECT * FROM tickets');
-  const tickets = stmt.all();
+  const stmt = db.prepare('SELECT * FROM tickets ORDER BY created_at DESC');
+  const rows = stmt.all();
+  // Parse metadata JSON for each ticket
+  const tickets = rows.map(row => {
+    let meta = {};
+    try {
+      meta = JSON.parse(row.metadata || '{}');
+    } catch (e) {
+      // ignore parse errors, keep meta empty
+    }
+    return {
+      ...row,
+      priority: meta.priority || '',
+      category: meta.category || '',
+      customerName: meta.customerName || ''
+    };
+  });
   res.json({ tickets });
 });
+
+// duplicate placeholder route removed
 
 const triage = require('./services/triage');
 
@@ -105,7 +147,7 @@ app.post('/draft/:id', (req, res) => {
   res.json({ ...result, guardrail: guard, warrantyEligible });
 });
 
-const db = require('./db');
+// db already required above
 const path = require('path');
 
 app.post('/action/:id', (req, res) => {

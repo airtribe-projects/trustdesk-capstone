@@ -29,6 +29,7 @@ const init = () => {
       message TEXT,
       created_at TEXT,
       metadata TEXT,
+      idempotency_key TEXT UNIQUE,
       FOREIGN KEY(customer_id) REFERENCES customers(id),
       FOREIGN KEY(order_id) REFERENCES orders(id)
     );
