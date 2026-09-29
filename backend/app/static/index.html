@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101827">
+    <title>TrustDesk Support Operations</title>
+    <link rel="stylesheet" href="/app/styles.css">
+    <script src="/app/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/app/"><span class="brand-mark">T</span>TrustDesk<span class="brand-subtitle">Support operations</span></a>
+      <div class="auth-control">
+        <label for="api-token">Bearer token</label>
+        <input id="api-token" type="password" autocomplete="off" placeholder="Enter configured API token">
+        <button id="load-tickets" class="button button-primary">Connect</button>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro">
+        <div>
+          <p class="eyebrow">SUPPORT WORKSPACE</p>
+          <h1>Ticket operations</h1>
+          <p class="muted">Review the customer context, run triage, prepare a cited reply, and route sensitive actions for human approval.</p>
+        </div>
+        <div id="connection-status" class="status-pill" role="status">Not connected</div>
+      </section>
+
+      <div id="notice" class="notice" role="alert" hidden></div>
+
+      <div class="workspace">
+        <aside class="panel queue-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">INBOX</p><h2>Ticket queue</h2></div>
+            <span id="ticket-count" class="count-badge">0</span>
+          </div>
+          <div id="ticket-queue" class="ticket-queue">
+            <p class="empty-state">Connect to load the seeded ticket queue.</p>
+          </div>
+        </aside>
+
+        <div class="main-column">
+          <section class="panel" aria-labelledby="ticket-heading">
+            <div class="panel-heading">
+              <div><p class="eyebrow">CUSTOMER REQUEST</p><h2 id="ticket-heading">Select a ticket</h2></div>
+              <span id="ticket-status" class="tag" hidden></span>
+            </div>
+            <div id="ticket-details" class="ticket-details empty-state">Select a ticket from the queue to review its details.</div>
+            <div class="button-row">
+              <button id="run-triage" class="button button-secondary" disabled>Run triage</button>
+              <button id="generate-draft" class="button button-primary" disabled>Generate draft</button>
+            </div>
+            <div id="triage-result" class="result-slot"></div>
+          </section>
+
+          <section id="draft-panel" class="panel" aria-labelledby="draft-heading">
+            <div class="panel-heading">
+              <div><p class="eyebrow">POLICY-GROUNDED RESPONSE</p><h2 id="draft-heading">Draft reply</h2></div>
+            </div>
+            <div id="draft-result" class="empty-state">Generate a draft to see the response and its knowledge-base citations.</div>
+          </section>
+
+          <section class="panel" aria-labelledby="action-heading">
+            <div class="panel-heading">
+              <div><p class="eyebrow">HUMAN REVIEW REQUIRED</p><h2 id="action-heading">Sensitive action</h2></div>
+              <span class="tag tag-amber">Approval gated</span>
+            </div>
+            <div id="action-result" class="empty-state">A supported sensitive recommendation will appear here after draft generation.</div>
+          </section>
+
+          <section class="panel" aria-labelledby="evaluation-heading">
+            <div class="panel-heading">
+              <div><p class="eyebrow">QUALITY CHECK</p><h2 id="evaluation-heading">Evaluation run</h2></div>
+              <button id="run-evaluation" class="button button-secondary" disabled>Run all cases</button>
+            </div>
+            <div id="evaluation-result" class="empty-state">Run the canonical evaluation cases to review the aggregate metrics.</div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
