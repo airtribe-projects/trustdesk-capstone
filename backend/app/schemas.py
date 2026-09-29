@@ -183,3 +183,18 @@ class ApprovalResponse(BaseModel):
 
 class ToolActionDetailResponse(ToolActionResponse):
     approvals: list[ApprovalResponse]
+
+
+class EvalRunRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    case_ids: list[str] | None = None
+
+
+class EvalRunResponse(BaseModel):
+    eval_run_id: str
+    started_at: datetime
+    completed_at: datetime
+    total_cases: int
+    metrics: dict[str, Any]
+    case_results: list[dict[str, Any]]

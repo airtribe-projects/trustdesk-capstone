@@ -194,3 +194,14 @@ class AgentRun(Base):
     )
 
     ticket: Mapped[Ticket] = relationship(back_populates="agent_runs")
+
+
+class EvalRun(Base):
+    __tablename__ = "eval_runs"
+
+    eval_run_id: Mapped[str] = mapped_column(String, primary_key=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    total_cases: Mapped[int] = mapped_column(Integer, nullable=False)
+    metrics: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    case_results: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False)
