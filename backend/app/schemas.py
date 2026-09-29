@@ -140,3 +140,46 @@ class DraftReplyResponse(BaseModel):
     citations: list[str]
     recommended_actions: list[RecommendedAction]
     run_id: str
+
+
+class ToolActionCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ticket_id: str
+    tool_name: str
+    payload: dict[str, Any]
+
+
+class ToolActionDecisionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reviewer_id: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
+class ToolActionResponse(BaseModel):
+    action_id: str
+    ticket_id: str
+    tool_name: str
+    payload: dict[str, Any]
+    risk_level: str
+    requires_human_approval: bool
+    status: str
+    idempotency_key: str
+    requested_by: str
+    created_at: datetime
+    updated_at: datetime
+    execution_result: dict[str, Any] | None
+
+
+class ApprovalResponse(BaseModel):
+    approval_id: str
+    action_id: str
+    reviewer_id: str
+    decision: str
+    reason: str
+    created_at: datetime
+
+
+class ToolActionDetailResponse(ToolActionResponse):
+    approvals: list[ApprovalResponse]

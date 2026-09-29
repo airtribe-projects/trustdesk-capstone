@@ -8,6 +8,7 @@ from .database import initialize_database
 from .api.tickets import router as tickets_router
 from .api.documents import router as documents_router
 from .api.drafts import router as drafts_router
+from .api.tool_actions import router as tool_actions_router
 
 
 @asynccontextmanager
@@ -22,6 +23,7 @@ app = FastAPI(title="TrustDesk API", version="0.1.0", lifespan=lifespan)
 app.include_router(tickets_router)
 app.include_router(documents_router)
 app.include_router(drafts_router)
+app.include_router(tool_actions_router)
 
 
 @app.get("/health")

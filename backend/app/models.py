@@ -3,7 +3,18 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -125,6 +136,47 @@ class DraftReply(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     ticket: Mapped[Ticket] = relationship()
+
+
+class ToolActionRequest(Base):
+    __tablename__ = "tool_action_requests"
+    __table_args__ = (
+        UniqueConstraint("tool_name", "idempotency_key", name="uq_tool_action_idempotency"),
+    )
+
+    action_id: Mapped[str] = mapped_column(String, primary_key=True)
+    ticket_id: Mapped[str] = mapped_column(ForeignKey("tickets.ticket_id"), nullable=False)
+    tool_name: Mapped[str] = mapped_column(
+        ForeignKey("tool_action_catalog.tool_name"), nullable=False
+    )
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String, nullable=False)
+    requires_human_approval: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    status: Mapped[str] = mapped_column(String, nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String, nullable=False)
+    requested_by: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    execution_result: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+
+    ticket: Mapped[Ticket] = relationship()
+    approvals: Mapped[list["Approval"]] = relationship(back_populates="action")
+
+
+class Approval(Base):
+    __tablename__ = "approvals"
+    __table_args__ = (UniqueConstraint("action_id", name="uq_approval_action"),)
+
+    approval_id: Mapped[str] = mapped_column(String, primary_key=True)
+    action_id: Mapped[str] = mapped_column(
+        ForeignKey("tool_action_requests.action_id"), nullable=False
+    )
+    reviewer_id: Mapped[str] = mapped_column(String, nullable=False)
+    decision: Mapped[str] = mapped_column(String, nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    action: Mapped[ToolActionRequest] = relationship(back_populates="approvals")
 
 
 class AgentRun(Base):
