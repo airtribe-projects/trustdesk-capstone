@@ -1,0 +1,13 @@
+services:
+  trustdesk:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      TRUSTDESK_DATABASE_URL: sqlite:////data/trustdesk.db
+      TRUSTDESK_API_TOKEN: ${TRUSTDESK_API_TOKEN:-trustdesk-demo-token}
+    volumes:
+      - trustdesk-db:/data
+
+volumes:
+  trustdesk-db:

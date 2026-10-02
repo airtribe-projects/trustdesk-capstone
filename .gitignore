@@ -4,3 +4,5 @@ trustdesk_seed.db
 __pycache__/
 .DS_Store
 
+
+*.db
