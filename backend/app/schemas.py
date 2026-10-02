@@ -198,3 +198,16 @@ class EvalRunResponse(BaseModel):
     total_cases: int
     metrics: dict[str, Any]
     case_results: list[dict[str, Any]]
+
+
+class AgentRunResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    run_id: str
+    ticket_id: str
+    run_type: str
+    status: str
+    retrieved_doc_ids: list[str]
+    tool_calls: list[dict[str, Any]]
+    guardrail_results: dict[str, Any]
+    created_at: datetime
