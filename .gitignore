@@ -1,6 +1,10 @@
-trustdesk_seed.db
-*.sqlite
-*.sqlite3
-__pycache__/
+node_modules/
+.env
+*.db
+*.log
 .DS_Store
-
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+workspaces/

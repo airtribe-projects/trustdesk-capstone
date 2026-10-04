@@ -1,0 +1,19 @@
+{
+  "name": "trustdesk",
+  "version": "3.0.0",
+  "private": true,
+  "description": "TrustDesk — AI support operations: knowledge base, internal assistant and guarded helpdesk automation",
+  "scripts": {
+    "postinstall": "npm --prefix server install && npm --prefix client install",
+    "start": "npm --prefix server start",
+    "dev": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client exec vite",
+    "build": "npm --prefix client exec vite build",
+    "test": "npm --prefix server test",
+    "eval": "npm --prefix server run eval --",
+    "eval:heldout": "npm --prefix server run eval:heldout --",
+    "reset": "npm --prefix server run reset --"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}
